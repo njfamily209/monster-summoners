@@ -121,6 +121,18 @@
     if (!merged.heroRunes || typeof merged.heroRunes !== 'object') merged.heroRunes = {};
     // dailyQuests: null is valid (will be seeded on first access)
     if (merged.dailyQuests !== null && typeof merged.dailyQuests !== 'object') merged.dailyQuests = null;
+    // Drop references to heroes that no longer exist in data (e.g. after a
+    // balance pass renames or removes a hero). Prevents downstream null
+    // dereferences when ascending, equipping runes, or building a team.
+    merged.ownedInstances = merged.ownedInstances.filter(function (i) { return i && D.heroById(i.id); });
+    merged.selectedHeroIds = merged.selectedHeroIds.filter(function (id) { return D.heroById(id); });
+    if (merged.heroRunes && typeof merged.heroRunes === 'object') {
+      for (var __h in merged.heroRunes) {
+        if (Object.prototype.hasOwnProperty.call(merged.heroRunes, __h) && !D.heroById(__h)) {
+          delete merged.heroRunes[__h];
+        }
+      }
+    }
     merged.version = SAVE_VERSION;
     return merged;
   }
