@@ -72,34 +72,49 @@
     // shows the fallback UI so the user never sees a blank screen.
     (function () {
       var BOOT_TIMEOUT_MS = 6000;
-      var booted = false;
-      function showFail(msg) {
+      var firstError = null;       // preserve the FIRST real error
+      var errorLog = [];           // collect everything for diagnostics
+      function showFail(msg, isWatchdog) {
         try {
           var el = document.getElementById('boot-fail');
           var pre = document.getElementById('boot-fail-msg');
-          if (pre && msg) pre.textContent = String(msg).substring(0, 1200);
+          // If a real error was already captured, don't let the watchdog overwrite it.
+          if (isWatchdog && firstError) {
+            msg = firstError + '\n\n--- watchdog ---\n' + msg;
+          }
+          if (pre && msg) pre.textContent = String(msg).substring(0, 2000);
           if (el) el.classList.add('show');
         } catch (e) {}
       }
       window.addEventListener('error', function (e) {
-        if (booted) return;
-        showFail((e.message || 'Unknown error') + '\n  at ' + (e.filename || '?') + ':' + (e.lineno || '?'));
-      });
+        var detail = (e.message || 'Unknown error') + '\n  at ' + (e.filename || '?') + ':' + (e.lineno || '?') + ':' + (e.colno || '?');
+        if (e.error && e.error.stack) detail += '\n  stack: ' + e.error.stack.split('\n').slice(0, 4).join('\n  ');
+        errorLog.push(detail);
+        if (!firstError) firstError = detail;
+        if (!window.__GAME__) showFail(detail, false);
+      }, true);
       window.addEventListener('unhandledrejection', function (e) {
-        if (booted) return;
-        showFail('Unhandled promise rejection: ' + (e.reason && e.reason.message ? e.reason.message : e.reason));
+        var detail = 'Unhandled rejection: ' + (e.reason && e.reason.message ? e.reason.message : e.reason);
+        errorLog.push(detail);
+        if (!firstError) firstError = detail;
+        if (!window.__GAME__) showFail(detail, false);
       });
-      // Watchdog: if __GAME__ never initialises, show the fail UI.
+      // Watchdog: if __GAME__ never initialises, show the fail UI with diagnostics.
       setTimeout(function () {
-        if (window.__GAME__) { booted = true; return; }
-        showFail('Game did not initialise within ' + BOOT_TIMEOUT_MS + 'ms. Modules loaded: ' +
-          ['GAME_DATA','GAME_ART','GAME_SAVE','GAME_SUMMON','GAME_AUDIO','GAME_COMBAT','GAME_UI']
-            .filter(function (k) { return !!window[k]; }).join(', ') || '(none)');
+        if (window.__GAME__) return;
+        var loaded = ['GAME_DATA','GAME_ART','GAME_SPRITES','GAME_SAVE','GAME_SUMMON','GAME_AUDIO','GAME_COMBAT','GAME_UI']
+          .filter(function (k) { return !!window[k]; });
+        var missing = ['GAME_DATA','GAME_ART','GAME_SPRITES','GAME_SAVE','GAME_SUMMON','GAME_AUDIO','GAME_COMBAT','GAME_UI']
+          .filter(function (k) { return !window[k]; });
+        var msg = 'Game did not initialise within ' + BOOT_TIMEOUT_MS + 'ms.' +
+                  '\nLoaded:  ' + (loaded.join(', ') || '(none)') +
+                  '\nMissing: ' + (missing.join(', ') || '(none)');
+        if (errorLog.length) msg += '\nErrors captured:\n  ' + errorLog.join('\n  ');
+        showFail(msg, true);
       }, BOOT_TIMEOUT_MS);
       // Emergency reset via URL: index.html?reset=1
       if (/[?&]reset=1\b/.test(location.search)) {
         try { localStorage.removeItem('aetherbound.save.v1'); } catch (e) {}
-        // Strip the query to avoid loops
         history.replaceState(null, '', location.pathname);
       }
     })();
