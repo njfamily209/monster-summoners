@@ -5,22 +5,10 @@
    =========================================================== */
 (function () {
   'use strict';
-  try {
   const D = window.GAME_DATA;
   const A = window.GAME_ART;
   const C = window.GAME_COMBAT;
-  if (!D || !A || !C) {
-    var missing = (!D ? 'GAME_DATA ' : '') + (!A ? 'GAME_ART ' : '') + (!C ? 'GAME_COMBAT' : '');
-    console.error('[ui.js] deps missing:', missing.trim());
-    try {
-      var pre0 = document.getElementById('boot-fail-msg');
-      var el0  = document.getElementById('boot-fail');
-      if (pre0) pre0.textContent = '[ui.js] cannot init -- missing deps: ' + missing.trim() +
-        (window.__ART_BOOT_ERR__ ? '\n\n[art.js] error was:\n' + window.__ART_BOOT_ERR__ : '');
-      if (el0)  el0.classList.add('show');
-    } catch (e) {}
-    return;
-  }
+  if (!D || !A || !C) { console.error('UI deps missing'); return; }
 
   function fmt(n) {
     if (n == null || !isFinite(n)) return '0';
@@ -2371,38 +2359,4 @@
     capcomCombo, capcomComboTick, capcomElemTint, capcomSuperZoom,
     captureBattleSnapshot,
   };
-  } catch (err) {
-    console.error('[ui.js] threw during IIFE:', err);
-    try {
-      var pre1 = document.getElementById('boot-fail-msg');
-      var el1  = document.getElementById('boot-fail');
-      if (pre1) pre1.textContent = '[ui.js] ' + (err && err.stack ? err.stack : String(err));
-      if (el1)  el1.classList.add('show');
-    } catch (e) {}
-    throw err;
-  }
-})();
-ageSelect, renderTeamSelect, renderBattle,
-    renderSummon, renderVault, renderCollection, renderHeroDetail,
-    renderShop, renderRunes, renderQuests,
-    renderLog, renderSkillPanel, renderAtb,
-    showPopup, animateUnit,
-    shakeField, hitStop, elementBurst,
-    showReveal, showResult, toast,
-    fmt,
-    SORT_OPTIONS, sortHeroes, renderSortSelector, roleClass,
-    capcomFlash, capcomStamp, capcomVS,
-    capcomCombo, capcomComboTick, capcomElemTint, capcomSuperZoom,
-    captureBattleSnapshot,
-  };
-  } catch (err) {
-    console.error("[ui.js] threw during IIFE:", err);
-    try {
-      var pre1 = document.getElementById("boot-fail-msg");
-      var el1  = document.getElementById("boot-fail");
-      if (pre1) pre1.textContent = "[ui.js] " + (err && err.stack ? err.stack : String(err));
-      if (el1)  el1.classList.add("show");
-    } catch (e) {}
-    throw err;
-  }
 })();
