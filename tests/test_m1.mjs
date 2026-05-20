@@ -247,12 +247,3 @@ if (failures.length) {
   console.log('All tests passed.');
   process.exit(0);
 }
-====================');
-console.log(`Total failures: ${failures.length}`);
-if (failures.length) {
-  failures.forEach(f => console.log('  - ' + f));
-  process.exit(1);
-} else {
-  console.log('All tests passed.');
-  process.exit(0);
-}

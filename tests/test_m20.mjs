@@ -303,10 +303,3 @@ if (failures.length) {
   console.log('All M2.0 tests passed.');
   process.exit(0);
 }
- {
-  failures.forEach(f => console.log('  - ' + f));
-  process.exit(1);
-} else {
-  console.log('All M2.0 tests passed.');
-  process.exit(0);
-}
