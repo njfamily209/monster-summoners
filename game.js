@@ -386,13 +386,31 @@
     rebattle, persistNow, persist, pickStage,
   };
 
+  function showBootFail(err) {
+    try {
+      const el = document.getElementById('boot-fail');
+      const pre = document.getElementById('boot-fail-msg');
+      const msg = (err && err.stack) ? err.stack : String(err);
+      if (pre) pre.textContent = msg.substring(0, 1200);
+      if (el) el.classList.add('show');
+    } catch (e) {}
+    console.error('Aetherbound init failed:', err);
+  }
+
   function init() {
-    navigate('title');
-    // Check for daily login bonus; show modal after a brief render delay.
-    const bonus = S.checkDailyLogin(state.player);
-    if (bonus) {
-      persistNow();
-      setTimeout(function() { if (U.showDailyBonus) U.showDailyBonus(bonus, ctx); }, 650);
+    try {
+      navigate('title');
+      // Check for daily login bonus; show modal after a brief render delay.
+      const bonus = S.checkDailyLogin(state.player);
+      if (bonus) {
+        persistNow();
+        setTimeout(function() {
+          try { if (U.showDailyBonus) U.showDailyBonus(bonus, ctx); }
+          catch (e) { console.warn('daily bonus modal failed (non-fatal):', e); }
+        }, 650);
+      }
+    } catch (err) {
+      showBootFail(err);
     }
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
