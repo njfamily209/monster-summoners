@@ -23,5 +23,11 @@ desktop.ini
 .idea/
 *.swp
 
-# Auto-push watcher log
-auto-push.log
+_test_write.txt
+_test_append.txt
+_test_big.txt
+art.js.broken
+ui.js.broken
+game.js.broken
+launch-test.js
+*.broken
