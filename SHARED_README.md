@@ -127,3 +127,24 @@ The reward economy (200–500c per win × tier `rewardMul`, 15–33% scroll drop
 - **"How do I add a stage?"** → append to `data.js::STAGES`, set `tier` / `enemyMul` / `rewardMul`
 - **"How do I add a screen?"** → write `renderFoo` in `ui.js`, add `else if (screen === 'foo')` to `game.js::navigate`, add a button somewhere that calls `ctx.navigate('foo')`
 - **"How are stages unlocked?"** → `save.js::isStageUnlocked` checks if any tier (N-1) stage is in `state.stagesCleared`
+
+---
+
+## Tool write truncation (discovered 2026-05-20)
+
+In addition to the documented `ui.js` / `style.css` risk, the Edit and Python-via-bash write paths have been observed to silently truncate **small** files (`save.js`, `combat.js`) when an edit grows the file. Symptoms: `node -c <file>` fails with `Unexpected end of input` and the tail of the file is cut mid-token (often inside the `window.GAME_*` export list).
+
+**Reliable write operations:**
+- `cat >> file <<'EOF' ... EOF` — heredoc APPEND on any size file
+- `rm -f file` — file deletion
+- `git checkout <ref> -- file` — checkout a known-good version
+- `Write` tool — full-file overwrite (verified on small files)
+
+**Risky write operations:**
+- `Edit` tool on any file — can truncate when growing the file
+- `python3 ... open(p, 'wb').write(src)` in a bash heredoc — same risk
+
+**Mitigation when editing tracked source:**
+1. Verify with `node -c <file>` immediately after every write.
+2. If truncated, restore with `git checkout <last-good-ref> -- <file>` and retry via the reliable path.
+3. Note that the background `auto-push` process commits every 15s of quiet, so a truncated file CAN end up committed. Recovery: `git log --oneline -10 -- <file>` and pick a pre-truncation commit.
