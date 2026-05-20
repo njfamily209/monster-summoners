@@ -264,6 +264,15 @@
   function equipRune(state, heroId, runeId) {
     const rune = (state.runeInventory || []).find(r => r.runeId === runeId);
     if (!rune) return null;
+    // Defensive: a corrupted rune (e.g., from an old save before slot existed)
+    // could have slot === undefined / NaN / out-of-range, which would index a
+    // bogus property on the slot array and silently break unequip later.
+    // Reject those rather than corrupt heroRunes state.
+    const rawSlot = rune.slot;
+    if (typeof rawSlot !== 'number' || !isFinite(rawSlot) ||
+        rawSlot < 1 || rawSlot > RUNE_SLOTS) {
+      return null;
+    }
     // Remove from any other hero's slot first so a rune can only be equipped once.
     if (state.heroRunes) {
       for (const otherId of Object.keys(state.heroRunes)) {
@@ -272,7 +281,7 @@
       }
     }
     ensureHeroRuneSlots(state, heroId);
-    const slotIdx = rune.slot - 1;
+    const slotIdx = rawSlot - 1;
     const displaced = state.heroRunes[heroId][slotIdx];
     state.heroRunes[heroId][slotIdx] = runeId;
     return displaced;
