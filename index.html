@@ -6,7 +6,31 @@
   <meta name="theme-color" content="#0a0d22" />
   <meta name="description" content="Aetherbound — a single-player fantasy summoning RPG. Collect heroes, master elements, and rise through the Aether." />
   <title>Aetherbound — Fantasy Summon RPG</title>
-  <link rel="stylesheet" href="style.css?v=20260520e" />
+  <link rel="stylesheet" href="style.css?v=20260520f" />
+  <style>
+    /* Inline boot-fail UI — never depends on style.css loading */
+    #boot-fail {
+      display: none; position: fixed; inset: 0; z-index: 99999;
+      background: #0a0d22; color: #ecefff;
+      font-family: system-ui, -apple-system, sans-serif;
+      padding: 32px 20px; box-sizing: border-box; overflow: auto;
+    }
+    #boot-fail.show { display: block; }
+    #boot-fail h1 { color: #ff6e7c; margin: 0 0 12px; font-size: 22px; }
+    #boot-fail p { color: #a4adcf; line-height: 1.5; max-width: 640px; }
+    #boot-fail pre {
+      background: #131739; border: 1px solid rgba(255,255,255,0.08);
+      padding: 12px; border-radius: 8px; overflow: auto; font-size: 12px;
+      max-height: 240px; max-width: 100%;
+    }
+    #boot-fail button {
+      background: #2a3170; color: #ecefff; border: 1px solid rgba(255,255,255,0.12);
+      padding: 10px 18px; border-radius: 8px; font-size: 14px; cursor: pointer;
+      margin-right: 8px; margin-top: 12px;
+    }
+    #boot-fail button.primary { background: #f5c46c; color: #0a0d22; font-weight: 600; }
+    #boot-fail button:hover { filter: brightness(1.15); }
+  </style>
 </head>
 <body>
   <div id="app" class="app" aria-live="polite">
