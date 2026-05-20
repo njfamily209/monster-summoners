@@ -3241,10 +3241,6 @@ img, svg { display: block; }
   animation: hud-card-pulse 1.6s ease-in-out infinite;
 }
 .hud-card.dead { opacity: 0.45; filter: grayscale(0.7); }
-@keyframes hud-card-pulse {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-1px); }
-}
 
 .hud-portrait {
   width: 56px;
@@ -3703,8 +3699,6 @@ img, svg { display: block; }
   background: #fff;
   animation: capcom-flash-fade 220ms ease-out forwards;
 }
-@keyframes capcom-flash-fade {
-  0%   { opacity
 /* ===========================================================
    BATTLE LAYOUT FIX — team-column grid items + unit flex stack
    Overrides the early display:contents / position:absolute rules
@@ -4295,3 +4289,78 @@ body { overflow-x: hidden; }
   .pity-bar-fill { transition: none; }
   .pity-bar.close .pity-bar-fill { animation: none; }
 }
+
+/* ===========================================================
+   SESSION FIXES — 2026-05-20
+   Appended overrides (never use small-edit tool on style.css).
+   These win the cascade by source order over the rules they fix.
+   =========================================================== */
+
+/* Fix 1: capcom-flash-fade keyframe was truncated mid-rule earlier in the file
+   (the original "0%   { opacity" line had no closing brace, so the crit white
+   flash silently did nothing). Define it correctly here so .capcom-flash works. */
+@keyframes capcom-flash-fade {
+  0%   { opacity: 0.85; }
+  100% { opacity: 0;    }
+}
+
+/* Fix 2: .capcom-stamp.defeat was #707070 — only ~3.2:1 contrast on the dark
+   bg, failing WCAG AA, and visually muted compared to Victory's gold. Match
+   the in-battle KO red so defeat reads as a hard stamp instead of a sigh. */
+.capcom-stamp.defeat {
+  color: #ff4a4a;
+  text-shadow: 0 0 18px rgba(255, 74, 74, 0.55),
+               0 4px 0 rgba(0, 0, 0, 0.6);
+}
+
+/* Fix 3: .unit max-width breakpoints were inverted — at <=900px it dropped to
+   140px, then at <=640px it jumped BACK UP to 200px. Phones were getting
+   bigger cards than tablets, breaking the 3v3 field grid. Clamp 640px down
+   to a value below the 900px tier so the progression is monotonic. */
+@media (max-width: 640px) {
+  .unit { max-width: 130px !important; }
+  .unit-avatar { max-width: 110px !important; }
+}
+
+/* =====================================================================
+   Mobile safe-area polish (2026-05-20j)
+   Notched/edge-to-edge phones cut off modal footers and reveal counters
+   without explicit safe-area-inset padding. index.html already sets
+   viewport-fit=cover, so env(safe-area-inset-*) values are non-zero on
+   iOS 11+ and Android with display cutouts.
+   Append-only: these rules override the in-place definitions above via
+   source order so we don't touch the brittle older selectors.
+   ===================================================================== */
+.modal-bg {
+  padding: max(0px, env(safe-area-inset-top))
+           max(0px, env(safe-area-inset-right))
+           max(0px, env(safe-area-inset-bottom))
+           max(0px, env(safe-area-inset-left));
+  box-sizing: border-box;
+}
+.modal-content {
+  max-height: min(100vh, 100dvh);
+  /* Keep the close button reachable above the home-indicator bar. */
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+.reveal-stage {
+  /* Use dvh where supported so the stage shrinks with mobile chrome
+     (URL bar) instead of overflowing the viewport. */
+  max-height: min(100vh, 100dvh);
+  padding-top: max(20px, env(safe-area-inset-top));
+  padding-bottom: max(20px, env(safe-area-inset-bottom));
+}
+.reveal-skip {
+  /* Pull the skip button below the notch on phones with display cutouts. */
+  top: max(16px, calc(env(safe-area-inset-top) + 8px));
+  right: max(16px, calc(env(safe-area-inset-right) + 8px));
+}
+.reveal-counter {
+  top: max(18px, calc(env(safe-area-inset-top) + 10px));
+  left: max(16px, calc(env(safe-area-inset-left) + 8px));
+}
+.toast {
+  /* Toasts anchor to bottom; respect the home indicator. */
+  bottom: max(24px, calc(env(safe-area-inset-bottom) + 16px));
+}
+ 

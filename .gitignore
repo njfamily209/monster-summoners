@@ -24,16 +24,13 @@ desktop.ini
 *.swp
 
 # Dev scratch (one-off verification / probe scripts)
-_test_write.txt
-_test_append.txt
-_test_big.txt
-_art_test.js
-_check.js
-_t.js
-_v.js
-_v2.js
-_wtest.txt
-_*.tmp
+# Underscore-prefixed files at the repo root and in tests/ are by convention
+# throw-away verification harnesses, not part of the canonical test suite.
+_*.js
+_*.mjs
+_*.txt
+tests/_*.mjs
+tests/_*.js
 art.js.broken
 ui.js.broken
 game.js.broken

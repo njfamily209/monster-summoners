@@ -9,7 +9,7 @@
   <meta name="theme-color" content="#0a0d22" />
   <meta name="description" content="Aetherbound — a single-player fantasy summoning RPG. Collect heroes, master elements, and rise through the Aether." />
   <title>Aetherbound — Fantasy Summon RPG</title>
-  <link rel="stylesheet" href="style.css?v=20260520f" />
+  <link rel="stylesheet" href="style.css?v=20260520i" />
   <style>
     /* Inline boot-fail UI — never depends on style.css loading */
     #boot-fail {
@@ -36,7 +36,7 @@
   </style>
 </head>
 <body>
-  <div id="app" class="app" aria-live="polite">
+  <div id="app" class="app" role="main" aria-live="polite">
     <!-- screens are mounted dynamically -->
   </div>
 
@@ -67,7 +67,7 @@
     <pre id="boot-fail-msg">(no error captured)</pre>
     <button class="primary" onclick="location.reload(true)">Hard reload</button>
     <button onclick="try{localStorage.removeItem('aetherbound.save.v1');}catch(e){}location.reload(true)">Reset save &amp; reload</button>
-    <button onclick="try{localStorage.clear();}catch(e){}location.reload(true)">Nuke all storage &amp; reload</button>
+    <button onclick="try{localStorage.clear();}catch(e){}location.reload(true)">Clear all storage &amp; reload</button>
   </div>
 
   <script>
@@ -116,14 +116,14 @@
     })();
   </script>
 
-  <script src="data.js?v=20260520h"></script>
-  <script src="art.js?v=20260520h"></script>
-  <script src="sprites.js?v=20260520h"></script>
-  <script src="save.js?v=20260520h"></script>
-  <script src="summon.js?v=20260520h"></script>
-  <script src="audio.js?v=20260520h"></script>
-  <script src="combat.js?v=20260520h"></script>
-  <script src="ui.js?v=20260520h"></script>
-  <script src="game.js?v=20260520h"></script>
+  <script src="data.js?v=20260520i"></script>
+  <script src="art.js?v=20260520i"></script>
+  <script src="sprites.js?v=20260520i"></script>
+  <script src="save.js?v=20260520i"></script>
+  <script src="summon.js?v=20260520i"></script>
+  <script src="audio.js?v=20260520i"></script>
+  <script src="combat.js?v=20260520i"></script>
+  <script src="ui.js?v=20260520i"></script>
+  <script src="game.js?v=20260520i"></script>
 </body>
 </html>

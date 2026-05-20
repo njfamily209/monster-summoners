@@ -878,22 +878,32 @@
       }, AU_battle.isMuted() ? '🔇' : '🔊');
       header.appendChild(muteBtn);
     }
-    const dbgBtn = h('button', {
-      class: 'mute-toggle debug-snapshot',
-      title: 'Copy battle layout snapshot to clipboard',
-      onclick: function () {
-        const report = captureBattleSnapshot();
-        const fallback = function () {
-          if (window.prompt) window.prompt('Copy snapshot, paste to Claude:', report);
-        };
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(report).then(function () {
-            toast('Snapshot copied. Paste in chat.');
-          }).catch(fallback);
-        } else { fallback(); }
-      }
-    }, 'DEBUG');
-    header.appendChild(dbgBtn);
+    // DEBUG snapshot button is opt-in: keeps the battle header uncluttered for
+    // real players, but devs can flip it on with ?debug=1 in the URL or by
+    // setting localStorage.aetherbound_debug = '1'.
+    var __debugOn = false;
+    try {
+      __debugOn = (typeof location !== 'undefined' && /[?&]debug=1\b/.test(location.search))
+        || (typeof localStorage !== 'undefined' && localStorage.getItem('aetherbound_debug') === '1');
+    } catch (e) { /* sandboxed contexts */ }
+    if (__debugOn) {
+      const dbgBtn = h('button', {
+        class: 'mute-toggle debug-snapshot',
+        title: 'Copy battle layout snapshot to clipboard',
+        onclick: function () {
+          const report = captureBattleSnapshot();
+          const fallback = function () {
+            if (window.prompt) window.prompt('Copy snapshot, paste to Claude:', report);
+          };
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(report).then(function () {
+              toast('Snapshot copied. Paste in chat.');
+            }).catch(fallback);
+          } else { fallback(); }
+        }
+      }, 'DEBUG');
+      header.appendChild(dbgBtn);
+    }
     app.appendChild(header);
 
     // JRPG layout: enemies LEFT, heroes RIGHT.
@@ -1976,7 +1986,7 @@
         onclick: function() { _runeHeroId = hid; _runeSlotSel = null; renderRunes(app, ctx); },
       });
       btn.appendChild(h('div', { class: 'rune-hero-name' }, hero.name));
-      btn.appendChild(h('div', { class: 'rune-hero-meta' }, equipped + '/6 runes'));
+      btn.appendChild(h('div', { class: 'rune-hero-meta' }, equipped + '/' + RUNE_SLOTS + ' runes'));
       picker.appendChild(btn);
     });
     screen.appendChild(picker);

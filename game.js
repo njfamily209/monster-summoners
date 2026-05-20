@@ -293,13 +293,19 @@
       const tgt = target || C.aliveEnemiesOf(b, caster)[0];
       if (tgt) {
         const hits = skill.hits || 1;
+        // Element-mod popup fires only on the FIRST sub-hit so a 4-hit attack
+        // doesn't carpet the target with "Strong!" popups. Grammar unified
+        // (no trailing punctuation either way) so the two popups feel symmetric.
+        let eModPopupShown = false;
         for (let i = 0; i < hits; i++) {
           if (!C.isAlive(tgt)) break;
           const r = C.calcAttackDamage(caster, tgt, skill);
           C.applyDamage(tgt, r.dmg);
           U.showPopup(tgt, r.crit ? (U.fmt(r.dmg) + '!') : ('-' + U.fmt(r.dmg)), r.crit ? 'crit' : 'dmg');
-          if (r.eMod > 1.0) U.showPopup(tgt, 'Strong!', 'strong', 20);
-          else if (r.eMod < 1.0) U.showPopup(tgt, 'Weak', 'weak', 20);
+          if (!eModPopupShown) {
+            if (r.eMod > 1.0) { U.showPopup(tgt, 'Strong', 'strong', 20); eModPopupShown = true; }
+            else if (r.eMod < 1.0) { U.showPopup(tgt, 'Weak', 'weak', 20); eModPopupShown = true; }
+          }
           U.animateUnit(tgt, 'flash');
           if (U.elementBurst) U.elementBurst(tgt, caster.element);
           if (hits >= 2 && U.capcomComboTick) U.capcomComboTick();
@@ -308,7 +314,7 @@
         }
         if (skill.onHit && C.isAlive(tgt)) {
           const chance = skill.onHit.chance != null ? skill.onHit.chance : 1.0;
-          if (Math.random() < chance) C.applyStatus(tgt, Object.assign({}, skill.onHit), logEntry);
+          if (Math.random() < chance) C.applyStatus(tgt, Object.assign({}, skill.onHit), logEntry, tgt === caster);
         }
       }
     } else if (skill.type === 'aoe') {
@@ -317,14 +323,14 @@
         const r = C.calcAttackDamage(caster, tgt, skill);
         C.applyDamage(tgt, r.dmg);
         U.showPopup(tgt, r.crit ? (U.fmt(r.dmg) + '!') : ('-' + U.fmt(r.dmg)), r.crit ? 'crit' : 'dmg');
-        if (r.eMod > 1.0) U.showPopup(tgt, 'Strong!', 'strong', 20);
+        if (r.eMod > 1.0) U.showPopup(tgt, 'Strong', 'strong', 20);
         else if (r.eMod < 1.0) U.showPopup(tgt, 'Weak', 'weak', 20);
         U.animateUnit(tgt, 'flash');
         if (U.elementBurst) U.elementBurst(tgt, caster.element);
         logEntry('&rarr; ' + tgt.name + ' took <strong>' + U.fmt(r.dmg) + '</strong>' + (r.crit ? ' (CRIT)' : '') + '.');
         if (skill.onHit && C.isAlive(tgt)) {
           const chance = skill.onHit.chance != null ? skill.onHit.chance : 1.0;
-          if (Math.random() < chance) C.applyStatus(tgt, Object.assign({}, skill.onHit), logEntry);
+          if (Math.random() < chance) C.applyStatus(tgt, Object.assign({}, skill.onHit), logEntry, tgt === caster);
         }
       }
     } else if (skill.type === 'heal') {
@@ -344,17 +350,21 @@
           if (skill.onCast.kind === 'shield') {
             const amt = Math.floor(tgt.maxHp * (skill.onCast.pct || 0.2));
             tgt.shield = Math.max(tgt.shield, amt);
-            tgt.statuses.push({ kind: 'shield', stat: 'shield', amount: 0, turns: (skill.onCast.turns || 2) + 1, label: skill.onCast.label || 'SHIELD' });
+            const declared = skill.onCast.turns || 2;
+            // +1 only when the shield lands on the caster themselves so that the
+            // immediate `tickEndOfTurn(caster)` doesn't eat a turn of duration.
+            const turns = (tgt === caster) ? declared + 1 : declared;
+            tgt.statuses.push({ kind: 'shield', stat: 'shield', amount: 0, turns: turns, label: skill.onCast.label || 'SHIELD' });
             U.showPopup(tgt, 'Shield ' + U.fmt(amt), 'heal');
             logEntry('&rarr; ' + tgt.name + ' gains a shield of <strong>' + U.fmt(amt) + '</strong>.');
           } else {
-            C.applyStatus(tgt, Object.assign({}, skill.onCast), logEntry);
+            C.applyStatus(tgt, Object.assign({}, skill.onCast), logEntry, tgt === caster);
           }
         }
       }
     }
 
-    if (skill.onSelf) C.applyStatus(caster, Object.assign({}, skill.onSelf), logEntry);
+    if (skill.onSelf) C.applyStatus(caster, Object.assign({}, skill.onSelf), logEntry, true);
     caster.cooldowns[skillId] = skill.cd || 0;
     C.tickEndOfTurn(caster);
     setTimeout(() => finishTurn(), C.ANIM_DELAY);
@@ -423,11 +433,10 @@
     setSelectedHeroIds: function(ids) { state.player.selectedHeroIds = ids.slice(); persist(); },
     confirmTeam, resetSave, rebattle, persist, persistNow, pickStage,
     grantVictoryRewards,
-    grantHero: function(id) { var inst = S.grantHero(state.player, id); persistNow(); return inst; },
+    grantHero: function(id) { const inst = S.grantHero(state.player, id); persistNow(); return inst; },
     grantAllHeroes: function() {
       D.HEROES.forEach(function(h) { if (!S.ownsHero(state.player, h.id)) S.grantHero(state.player, h.id); });
       persistNow();
     },
   };
 })();
-// CANARY 2026-05-20T07:41:30.030Z

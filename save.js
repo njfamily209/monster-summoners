@@ -121,6 +121,16 @@
     if (!merged.heroRunes || typeof merged.heroRunes !== 'object') merged.heroRunes = {};
     // dailyQuests: null is valid (will be seeded on first access)
     if (merged.dailyQuests !== null && typeof merged.dailyQuests !== 'object') merged.dailyQuests = null;
+    // Drop references to heroes that no longer exist in data (e.g. after a
+    // balance pass renames or removes a hero). Prevents downstream null
+    // dereferences when ascending, equipping runes, or building a team.
+    merged.ownedInstances = merged.ownedInstances.filter(i => i && D.heroById(i.id));
+    merged.selectedHeroIds = merged.selectedHeroIds.filter(id => D.heroById(id));
+    if (merged.heroRunes && typeof merged.heroRunes === 'object') {
+      for (const heroId of Object.keys(merged.heroRunes)) {
+        if (!D.heroById(heroId)) delete merged.heroRunes[heroId];
+      }
+    }
     merged.version = SAVE_VERSION;
     return merged;
   }
@@ -169,8 +179,16 @@
   function findInstance(state, instanceId) {
     return state.ownedInstances.find(i => i.instanceId === instanceId) || null;
   }
-  function addCrystals(state, n) { state.crystals = Math.max(0, state.crystals + n); }
-  function addScrolls(state, n)  { state.scrolls  = Math.max(0, state.scrolls  + n); }
+  function addCrystals(state, n) {
+    if (typeof n !== 'number' || !isFinite(n)) return;
+    if (typeof state.crystals !== 'number' || !isFinite(state.crystals)) state.crystals = 0;
+    state.crystals = Math.max(0, state.crystals + n);
+  }
+  function addScrolls(state, n) {
+    if (typeof n !== 'number' || !isFinite(n)) return;
+    if (typeof state.scrolls !== 'number' || !isFinite(state.scrolls)) state.scrolls = 0;
+    state.scrolls = Math.max(0, state.scrolls + n);
+  }
 
   // ----- Ascension -----
   const MAX_STARS = 6;

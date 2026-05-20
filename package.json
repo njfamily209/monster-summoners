@@ -1,4 +1,8 @@
 {
+  "scripts": {
+    "check": "for f in *.js; do node -c \"$f\" || exit 1; done && echo 'All JS files: syntax OK'",
+    "test": "cd tests && for t in test_m1.mjs test_m20.mjs test_m21.mjs test_m22.mjs test_m30.mjs test_m40.mjs test_m50.mjs test_feel.mjs test_sprites.mjs; do node \"$t\" || exit 1; done"
+  },
   "devDependencies": {
     "jsdom": "^29.1.1"
   }
