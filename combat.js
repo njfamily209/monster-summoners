@@ -195,6 +195,9 @@
       let target = null;
       let score = 120 + cd * 12;
       if (ctx.skill.type === 'aoe') {
+        // 1v1 guard: don't burn a multi-target cooldown on a single foe.
+        // Fallback path still picks AOE if it's the only skill off cd.
+        if (ctx.enemies.length <= 1) return null;
         score += ctx.enemies.length * 10;
       } else {
         target = pickAttackTarget(ctx.unit, ctx.enemies, ctx.skill);
@@ -211,7 +214,11 @@
       return { target: finishable, score: 110 };
     },
     function defaultAttack(ctx) {
-      if (ctx.skill.type === 'aoe') return { target: null, score: 70 + ctx.enemies.length * 5 };
+      if (ctx.skill.type === 'aoe') {
+        // Same 1v1 guard as specialOffCd.
+        if (ctx.enemies.length <= 1) return null;
+        return { target: null, score: 70 + ctx.enemies.length * 5 };
+      }
       if (ctx.skill.type === 'attack' || ctx.skill.type === 'multihit') {
         const target = pickAttackTarget(ctx.unit, ctx.enemies, ctx.skill);
         if (!target) return null;
