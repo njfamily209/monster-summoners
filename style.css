@@ -4364,3 +4364,22 @@ body { overflow-x: hidden; }
   bottom: max(24px, calc(env(safe-area-inset-bottom) + 16px));
 }
  
+/* ---------------------------------------------------------------------------
+   Reduced-motion fallback for damage / heal / status popups.
+   The base .popup rules use !important to keep the JRPG layout consistent,
+   so the global @media (prefers-reduced-motion: reduce) rule elsewhere in
+   this file does not suppress them. Force them to a static appearance for
+   users who opt out of motion.
+   --------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .popup,
+  .popup.crit,
+  .popup.strong,
+  .popup.heal,
+  .popup.miss {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: translate(-50%, -28px) !important;
+  }
+}
