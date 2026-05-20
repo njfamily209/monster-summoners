@@ -4243,3 +4243,55 @@ body { overflow-x: hidden; }
 @media (max-width: 360px) {
   .title-action-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
 }
+
+/* ===========================================================================
+   Summon screen — visible Pity progress bar (P-Retention.1)
+   Shows current pity count / threshold with a fill bar. The "close" modifier
+   kicks in within the last 5 pulls of the guarantee to nudge retention.
+   =========================================================================== */
+.pity-bar {
+  margin-top: 8px;
+  background: var(--panel, rgba(20,22,32,0.55));
+  border: 1px solid var(--panel-border, rgba(255,255,255,0.08));
+  border-radius: var(--radius-sm, 8px);
+  padding: 10px 14px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.pity-bar-label {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 12px; text-transform: uppercase; letter-spacing: 0.6px;
+  color: var(--muted, #aab);
+}
+.pity-bar-label .pity-bar-count {
+  color: var(--text, #fff);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.pity-bar-track {
+  position: relative;
+  height: 8px;
+  background: rgba(0,0,0,0.4);
+  border-radius: 999px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
+}
+.pity-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #6b7eff 0%, #b48bff 60%, #f5c46c 100%);
+  border-radius: 999px;
+  transition: width 360ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  box-shadow: 0 0 8px rgba(245,196,108,0.4);
+}
+.pity-bar.close .pity-bar-fill {
+  background: linear-gradient(90deg, #f5c46c 0%, #ffd980 50%, #fff3c7 100%);
+  animation: pity-bar-pulse 1.4s ease-in-out infinite;
+}
+.pity-bar.close .pity-bar-count { color: #ffd980; }
+@keyframes pity-bar-pulse {
+  0%, 100% { box-shadow: 0 0 6px rgba(245,196,108,0.5); }
+  50%      { box-shadow: 0 0 14px rgba(255,217,128,0.95); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pity-bar-fill { transition: none; }
+  .pity-bar.close .pity-bar-fill { animation: none; }
+}
