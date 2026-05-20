@@ -4383,3 +4383,8 @@ body { overflow-x: hidden; }
     transform: translate(-50%, -28px) !important;
   }
 }
+
+/* 2026-05-20 — Visual clarity: raise contrast on the cooldown skill-button
+   description text. Original #4d536f sits below WCAG on the dimmed
+   panel; #7e87a8 reads cleanly without spoiling the disabled feel. */
+.skill-btn.on-cooldown .skill-desc { color: #7e87a8; }
