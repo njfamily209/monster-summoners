@@ -101,17 +101,13 @@
   function makeBattle(heroIds, stage, opts) {
     const levelMap   = (opts && opts.levelMap)   || {};
     const runeBoosts = (opts && opts.runeBoosts) || {};
-    const heroes = heroIds.map((id, i) => {
-      const t = D.HEROES.find(h => h.id === id);
-      if (!t) { console.warn('Unknown hero id in team:', id); return null; }
-      return buildUnit(t, 'ally', i, levelMap[id] || 1, runeBoosts[id] || null);
-    }).filter(Boolean);
+    const heroes = heroIds.map((id, i) => buildUnit(
+      D.HEROES.find(h => h.id === id), 'ally', i, levelMap[id] || 1, runeBoosts[id] || null
+    ));
     // Apply stage enemyMul — lets us reuse enemy templates at higher tiers.
     const mul = (stage && stage.enemyMul) || 1.0;
-    const enemies = (stage.enemyIds || []).map((id, i) => {
-      const t = D.ENEMIES.find(e => e.id === id);
-      if (!t) { console.warn('Unknown enemy id in stage:', id); return null; }
-      const u = buildUnit(t, 'enemy', i);
+    const enemies = stage.enemyIds.map((id, i) => {
+      const u = buildUnit(D.ENEMIES.find(e => e.id === id), 'enemy', i);
       if (mul !== 1.0) {
         u.base.hp = Math.floor(u.base.hp * mul);
         u.base.atk = Math.floor(u.base.atk * mul);
@@ -120,7 +116,7 @@
         u.hp = u.maxHp;
       }
       return u;
-    }).filter(Boolean);
+    });
     heroes.forEach(u => u.atb = Math.random() * 25);
     enemies.forEach(u => u.atb = Math.random() * 25);
     return {
@@ -142,22 +138,11 @@
   }
 
   function applyStatus(unit, status, log) {
-    const declaredTurns = (status.turns || 1) + 1;
-    // Stun dedupe: if already stunned, refresh to the longer remaining duration
-    // rather than stacking chains beyond design intent.
-    if (status.stat === 'stun') {
-      const existing = (unit.statuses || []).find(s => s.stat === 'stun');
-      if (existing) {
-        existing.turns = Math.max(existing.turns, declaredTurns);
-        if (status.label && log) log(`→ ${unit.name} is <strong>${status.label || 'Stunned'}</strong> (refreshed).`);
-        return;
-      }
-    }
     unit.statuses.push({
       kind: status.kind || 'buff',
       stat: status.stat,
       amount: status.amount || 0,
-      turns: declaredTurns,
+      turns: (status.turns || 1) + 1,
       label: status.label || '',
     });
     if (status.label && log) log(`→ ${unit.name} gains <strong>${status.label}</strong> for ${status.turns || 1} turn(s).`);
@@ -210,10 +195,6 @@
       let target = null;
       let score = 120 + cd * 12;
       if (ctx.skill.type === 'aoe') {
-        // Don't burn a multi-target cooldown on a single foe — let single-target
-        // skills win the rule comparison. Fallback path still picks AOE if it's
-        // the only skill off cooldown (handled in pickAllyAction).
-        if (ctx.enemies.length <= 1) return null;
         score += ctx.enemies.length * 10;
       } else {
         target = pickAttackTarget(ctx.unit, ctx.enemies, ctx.skill);
@@ -230,12 +211,7 @@
       return { target: finishable, score: 110 };
     },
     function defaultAttack(ctx) {
-      if (ctx.skill.type === 'aoe') {
-        // Same 1v1 guard as specialOffCd — single-target attacks are strictly
-        // better against one foe. Sole-skill fallback still rescues us.
-        if (ctx.enemies.length <= 1) return null;
-        return { target: null, score: 70 + ctx.enemies.length * 5 };
-      }
+      if (ctx.skill.type === 'aoe') return { target: null, score: 70 + ctx.enemies.length * 5 };
       if (ctx.skill.type === 'attack' || ctx.skill.type === 'multihit') {
         const target = pickAttackTarget(ctx.unit, ctx.enemies, ctx.skill);
         if (!target) return null;
@@ -284,4 +260,17 @@
     const sid = available[0];
     const sk = D.SKILLS[sid];
     let target = null;
-    if (sk.target === 'enemy'
+    if (sk.target === 'enemy') target = enemies[0];
+    else if (sk.target === 'ally') target = allies[0];
+    return { skillId: sid, target };
+  }
+
+  window.GAME_COMBAT = {
+    ATB_TICK_MS, ATB_RATE, DEF_SCALE, ANIM_DELAY, ENEMY_THINK_MS, LOG_MAX,
+    statMul, effStat, isStunned, isAlive,
+    calcAttackDamage, applyDamage, applyHeal,
+    buildUnit, makeBattle, allUnits, aliveEnemiesOf, aliveAlliesOf,
+    tickEndOfTurn, applyStatus, checkResult, pickAiAction,
+    pickAllyAction, pickAttackTarget, PRIORITY_RULES,
+  };
+})();
