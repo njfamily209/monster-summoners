@@ -1604,10 +1604,18 @@
     app.appendChild(banner);
     const p = ctx.state.player;
     const meta = h('div', { class: 'summon-meta' });
-    const pityRemaining = Math.max(0, SUM.PITY_THRESHOLD - p.pityCount);
+    const pityCount = Math.max(0, Math.min(SUM.PITY_THRESHOLD, p.pityCount | 0));
+    const pityRemaining = Math.max(0, SUM.PITY_THRESHOLD - pityCount);
+    const pityPct = Math.min(100, Math.round((pityCount / SUM.PITY_THRESHOLD) * 100));
+    const pityClose = pityRemaining <= 5;
     meta.innerHTML = `<div><span class="meta-key">Total summons</span><span class="meta-val">${p.totalSummons}</span></div>
 <div><span class="meta-key">Pity in</span><span class="meta-val">${pityRemaining} pulls</span></div>`;
     app.appendChild(meta);
+    // Visible pity progress bar — retention-loop signal for the player.
+    const pityBar = h('div', { class: 'pity-bar' + (pityClose ? ' close' : '') });
+    pityBar.innerHTML = `<div class="pity-bar-label"><span>5★ Guarantee</span><span class="pity-bar-count">${pityCount} / ${SUM.PITY_THRESHOLD}</span></div>
+<div class="pity-bar-track"><div class="pity-bar-fill" style="width:${pityPct}%"></div></div>`;
+    app.appendChild(pityBar);
     const actions = h('div', { class: 'summon-actions' });
     const canSingleC = p.crystals >= SUM.COST_SINGLE_CRYSTALS;
     const canSingleS = p.scrolls >= 1;
@@ -1844,7 +1852,7 @@
         S.addCrystals(p, 250);
         ctx.persistNow && ctx.persistNow();
         if (typeof localStorage !== 'undefined') localStorage.setItem(freeKey, '1');
-        toast('+250 crystals claimed!');
+        toast('+250 Crystals claimed!');
         renderShop(app, ctx);
       };
     }
@@ -1878,7 +1886,7 @@
           function () {
             S.addCrystals(p, total);
             ctx.persistNow && ctx.persistNow();
-            toast('+' + total.toLocaleString() + ' crystals added!');
+            toast('+' + total.toLocaleString() + ' Crystals added!');
             renderShop(app, ctx);
           }
         );
@@ -1905,7 +1913,7 @@
           function () {
             S.addScrolls(p, pack.scrolls);
             ctx.persistNow && ctx.persistNow();
-            toast('+' + pack.scrolls + ' scroll' + (pack.scrolls > 1 ? 's' : '') + ' added!');
+            toast('+' + pack.scrolls + ' Scroll' + (pack.scrolls > 1 ? 's' : '') + ' added!');
             renderShop(app, ctx);
           }
         );
@@ -2127,8 +2135,12 @@
           style: 'border-color:' + color + '55',
           onclick: function() {
             if (_runeSlotSel === null) return; // no slot selected — clicking does nothing
-            S.equipRune(p, _runeHeroId, rune.runeId);
-            if (S.progressQuest) S.progressQuest(p, 'rune', 1);
+            // equipRune returns the previously-equipped runeId in that slot (or null).
+            // Only count this as quest progress if a NET change occurred — re-clicking
+            // the already-slotted rune should not advance the "Equip N Runes" daily.
+            const displaced = S.equipRune(p, _runeHeroId, rune.runeId);
+            const netChange = (displaced !== rune.runeId);
+            if (netChange && S.progressQuest) S.progressQuest(p, 'rune', 1);
             _runeSlotSel = null;
             ctx.persist && ctx.persist();
             renderRunes(app, ctx);
@@ -2344,6 +2356,34 @@
 
   const renderCollection = renderVault;
   const renderHeroDetail = showHeroDetail;
+
+  // ---- Global button-click audio (single delegated listener) -----------------
+  // Most buttons in the game had no audio cue. Rather than wiring AU.play in
+  // every single onclick handler, a delegated listener on document plays a
+  // light "button" tick on visible button clicks and an "error" thud when the
+  // user clicks something disabled. Battle-specific sounds (skill_cast, hit,
+  // victory) are still fired explicitly from their own call sites.
+  (function installClickSfx() {
+    if (typeof document === 'undefined' || document.__abClickSfxInstalled) return;
+    document.__abClickSfxInstalled = true;
+    document.addEventListener('click', function (e) {
+      const AU = window.GAME_AUDIO;
+      if (!AU || !AU.play) return;
+      // Find the nearest clickable affordance from the click target.
+      const btn = e.target && e.target.closest && e.target.closest(
+        'button, .btn, .btn-nav, .btn-secondary, .icon-btn, .btn-link, ' +
+        '.summon-btn, .skill-btn, .shop-card, .stage-card, .roster-card'
+      );
+      if (!btn) return;
+      // Skip click sounds on full-screen reveal overlays — those have their
+      // own audio cues (summon_pop, capcom stamps) and a tick would muddy them.
+      if (btn.closest && (btn.closest('.reveal-overlay') || btn.closest('.capcom-stamp'))) return;
+      const isDisabled = btn.disabled === true ||
+        btn.classList.contains('off') ||
+        btn.getAttribute('aria-disabled') === 'true';
+      try { AU.play(isDisabled ? 'error' : 'button'); } catch (_) {}
+    }, true); // capture so we run before the click handler navigates away
+  })();
 
   window.GAME_UI = {
     renderTitle, renderStageSelect, renderTeamSelect, renderBattle,

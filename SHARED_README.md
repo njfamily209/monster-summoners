@@ -16,6 +16,8 @@ This document is the contract between the **Backend**, **Frontend**, and **QA** 
 | `style.css` | Frontend | Every selector, every animation. Append-only via heredoc to avoid Edit truncation. |
 | `index.html` | Frontend | Page shell + script ordering. Rarely modified. |
 | `art.js` | Frontend | Procedural SVG portrait kinds + pack registry. |
+| `sprites.js` | Frontend | LPC sprite-pack registry + animated character renderer (currently empty SPRITE_MAP). |
+| `audio.js` | Backend | Web Audio sfx synth, mute persistence, throttle. |
 | `tests/test_*.mjs` | QA | All milestone test suites. QA also writes their own helpers. |
 | **`game.js`** | **SHARED** | Routing, state shape, combat orchestration, persistence glue. **Coordinate before edits.** |
 
@@ -53,8 +55,8 @@ When Backend or Frontend changes a behavior tested by an existing suite:
 
 Two source files routinely brush against the platform's tool-edit truncation threshold:
 
-- `ui.js` (currently ~43 KB)
-- `style.css` (currently ~58 KB)
+- `ui.js` (currently ~113 KB)
+- `style.css` (currently ~158 KB)
 
 **Rule:** never use the small-edit tool on `ui.js` or `style.css`. Always rewrite the whole file via bash heredoc, or append-only via heredoc for CSS. Edits to small files (`save.js`, `summon.js`, `data.js`, `combat.js`, `game.js`) are fine, but **verify with `node -c <file>` after every edit** — truncation is silent.
 
@@ -67,7 +69,9 @@ If you see `Unexpected end of input` in the test output, the most likely cause i
 From the `tests/` directory:
 
 ```bash
-for t in test_m1.mjs test_m20.mjs test_m21.mjs test_m22.mjs test_m30.mjs; do
+for t in test_m1.mjs test_m20.mjs test_m21.mjs test_m22.mjs \
+         test_m30.mjs test_m40.mjs test_m50.mjs \
+         test_feel.mjs test_sprites.mjs; do
   node "$t"
 done
 ```
@@ -91,12 +95,9 @@ If `SAVE_VERSION` is bumped, the migration chain must transform every prior vers
 
 ## Currency for dev testing
 
-`save.js::STARTER_CRYSTALS = 9_999_999` and `STARTER_SCROLLS = 99`. **This is a dev override.** Before launch, drop both to:
+`save.js::STARTER_CRYSTALS = 1500` and `STARTER_SCROLLS = 10` (launch-shaped values).
 
-- `STARTER_CRYSTALS = 1500`
-- `STARTER_SCROLLS = 1`
-
-The reward economy (200–500c per win × tier `rewardMul`, 15–33% scroll drop) is sized for those launch values.
+The reward economy (200–500c per win × tier `rewardMul`, 15–33% scroll drop) is sized around those launch values. If you need crystals for manual playtesting, bump them locally only — do not commit a dev override into `save.js`.
 
 ---
 
