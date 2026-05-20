@@ -23,11 +23,8 @@ desktop.ini
 .idea/
 *.swp
 
+# Dev scratch (one-off verification / probe scripts)
 _test_write.txt
 _test_append.txt
 _test_big.txt
-art.js.broken
-ui.js.broken
-game.js.broken
-launch-test.js
-*.broken
+_art_test.js
