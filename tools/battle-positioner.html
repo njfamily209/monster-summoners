@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Aetherbound — Battle Field Positioner</title>
+<style>
+  :root {
+    --bg:           #14172a;
+    --panel:        rgba(28, 32, 50, 0.95);
+    --panel-2:      rgba(20, 22, 36, 0.95);
+    --text:         #e6eaf5;
+    --text-muted:   #98a0c0;
+    --gold:         #ffd56a;
+    --enemy:        #ff6868;
+    --ally:         #8acaff;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; }
+  body { padding: 24px 16px; min-height: 100vh; }
+  .wrap { max-width: 960px; margin: 0 auto; }
+  h1 { margin: 0 0 8px; font-size: 22px; font-weight: 600; }
+  .help { color: var(--text-muted); font-size: 13px; margin: 0 0 16px; line-height: 1.6; }
+  .field-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: linear-gradient(180deg, #2c3a55 0%, #6b5a48 65%, #4a3826 100%);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.5);
+    user-select: none;
+    touch-action: none;
+  }
+  .field-wrap::before {
+    content: '';
+    position: absolute; left: 0; right: 0; top: 50%; height: 50%;
+    background: linear-gradient(180deg, rgba(120,90,50,0.15), rgba(80,60,30,0.35));
+    pointer-events: none;
+  }
+  .center-line {
+    position: absolute; left: 50%; top: 12%; bottom: 12%; width: 2px;
+    background: linear-gradient(180deg, transparent, rgba(255,213,106,0.35), transparent);
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+  .center-vs {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    background: rgba(20,20,30,0.85); color: var(--gold);
+    border: 1px solid var(--gold); padding: 3px 9px; border-radius: 999px;
+    font-family: 'Impact', 'Arial Black', sans-serif; font-weight: 900;
+    font-size: 11px; pointer-events: none;
+  }
+
+  .unit {
+    position: absolute; cursor: grab;
+  }
+  .unit.dragging { cursor: grabbing; z-index: 50; }
+  .unit-card {
+    background: linear-gradient(180deg, var(--panel), var(--panel-2));
+    border-radius: 8px;
+    padding: 6px;
+    text-align: center;
+  }
+  .unit[data-side="enemy"] .unit-card { border: 1.5px solid rgba(255, 80, 80, 0.5); }
+  .unit[data-side="enemy"][data-slot="2"] .unit-card { border-color: rgba(255, 80, 80, 0.65); }
+  .unit[data-side="enemy"][data-slot="3"] .unit-card { border-color: rgba(255, 80, 80, 0.85); }
+  .unit[data-side="ally"]  .unit-card { border: 1.5px solid rgba(120, 180, 255, 0.5); }
+  .unit[data-side="ally"][data-slot="2"]  .unit-card { border-color: rgba(120, 180, 255, 0.65); }
+  .unit[data-side="ally"][data-slot="3"]  .unit-card { border-color: rgba(120, 180, 255, 0.85); }
+
+  .unit-tile {
+    border-radius: 6px; aspect-ratio: 1;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 700;
+  }
+  .unit[data-side="enemy"] .unit-tile { background: #4a2a2a; color: #ff8a8a; }
+  .unit[data-side="ally"]  .unit-tile { background: #2a3a4a; color: #8acaff; }
+  .unit-label {
+    font-size: 10px; margin-top: 4px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .unit[data-side="enemy"] .unit-label { color: #ffaaaa; }
+  .unit[data-side="ally"]  .unit-label { color: #aaccff; }
+
+  .controls {
+    margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap;
+  }
+  button {
+    background: rgba(40, 36, 60, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text);
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 120ms, border-color 120ms, transform 120ms;
+  }
+  button:hover { background: rgba(60, 55, 90, 0.85); border-color: rgba(255, 213, 106, 0.4); }
+  button:active { transform: translateY(1px); }
+  button.primary { background: rgba(245, 196, 108, 0.18); border-color: var(--gold); color: var(--gold); }
+
+  .readout {
+    margin-top: 16px;
+    background: rgba(30, 34, 54, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--text);
+  }
+  .readout span.label { color: var(--text-muted); margin-right: 8px; }
+  .css-block {
+    margin-top: 12px;
+    background: rgba(15, 17, 30, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    color: #d0d6e8;
+    white-space: pre-wrap;
+    user-select: all;
+  }
+  .toast { color: #95ffb0; font-size: 12px; min-height: 16px; margin-top: 8px; }
+  .footer-note { color: var(--text-muted); font-size: 11px; line-height: 1.6; margin-top: 16px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Aetherbound — Battle Field Positioner</h1>
+  <p class="help">Drag any unit. The CSS rules below update live with the positions. Copy them and paste into <code>style.css</code> at the layered cluster block (around line 3365). E = enemy slots 1-3 (back / mid / front), A = ally slots 1-3.</p>
+
+  <div id="field" class="field-wrap">
+    <div class="center-line"></div>
+    <div class="center-vs">VS</div>
+
+    <div class="unit" data-side="enemy" data-slot="1" style="left: 4%; bottom: 38%; width: 14%;">
+      <div class="unit-card">
+        <div class="unit-tile">E1</div>
+        <div class="unit-label">Enemy · Back</div>
+      </div>
+    </div>
+    <div class="unit" data-side="enemy" data-slot="2" style="left: 18%; bottom: 22%; width: 15%;">
+      <div class="unit-card">
+        <div class="unit-tile">E2</div>
+        <div class="unit-label">Enemy · Mid</div>
+      </div>
+    </div>
+    <div class="unit" data-side="enemy" data-slot="3" style="left: 32%; bottom: 4%; width: 16%;">
+      <div class="unit-card">
+        <div class="unit-tile">E3</div>
+        <div class="unit-label">Enemy · Front</div>
+      </div>
+    </div>
+
+    <div class="unit" data-side="ally" data-slot="1" style="left: 82%; bottom: 38%; width: 14%;">
+      <div class="unit-card">
+        <div class="unit-tile">A1</div>
+        <div class="unit-label">Ally · Back</div>
+      </div>
+    </div>
+    <div class="unit" data-side="ally" data-slot="2" style="left: 67%; bottom: 22%; width: 15%;">
+      <div class="unit-card">
+        <div class="unit-tile">A2</div>
+        <div class="unit-label">Ally · Mid</div>
+      </div>
+    </div>
+    <div class="unit" data-side="ally" data-slot="3" style="left: 52%; bottom: 4%; width: 16%;">
+      <div class="unit-card">
+        <div class="unit-tile">A3</div>
+        <div class="unit-label">Ally · Front</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="btn-reset">Reset to current game defaults</button>
+    <button id="btn-copy" class="primary">Copy CSS to clipboard</button>
+    <button id="btn-show">Show CSS below</button>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <div id="readout" class="readout">Loading positions…</div>
+
+  <pre id="css-out" class="css-block" hidden></pre>
+
+  <p class="footer-note">
+    The CSS uses the same selector shape that ships in <code>style.css</code>:
+    <code>.field.field-jrpg &gt; .team-column.enemies &gt; .unit:nth-child(N)</code>
+    for enemies and <code>.team-column.allies</code> for heroes. Enemies use
+    <code>left:</code>, heroes use <code>right:</code>, and both use <code>bottom:</code>
+    for vertical placement.
+  </p>
+
+</div>
+
+<script>
+(function () {
+  const field = document.getElementById('field');
+  const readout = document.getElementById('readout');
+  const toast = document.getElementById('toast');
+  const cssOut = document.getElementById('css-out');
+  const units = Array.from(document.querySelectorAll('.unit'));
+
+  const DEFAULTS = {
+    'enemy-1': { left: 4,  bottom: 38 },
+    'enemy-2': { left: 18, bottom: 22 },
+    'enemy-3': { left: 32, bottom: 4  },
+    'ally-1':  { left: 82, bottom: 38 },
+    'ally-2':  { left: 67, bottom: 22 },
+    'ally-3':  { left: 52, bottom: 4  },
+  };
+
+  function key(el) { return el.dataset.side + '-' + el.dataset.slot; }
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+  function getPos(el) {
+    const rect = field.getBoundingClientRect();
+    const u = el.getBoundingClientRect();
+    const leftPx = u.left - rect.left;
+    const bottomPx = (rect.top + rect.height) - (u.top + u.height);
+    return {
+      left:   +(leftPx / rect.width * 100).toFixed(1),
+      bottom: +(bottomPx / rect.height * 100).toFixed(1),
+      widthPct: +(u.width / rect.width * 100).toFixed(1),
+    };
+  }
+
+  function buildPayload() {
+    return units.map(el => {
+      const p = getPos(el);
+      return { side: el.dataset.side, slot: el.dataset.slot, left: p.left, bottom: p.bottom, widthPct: p.widthPct };
+    });
+  }
+
+  function payloadAsCss(payload) {
+    const lines = [];
+    payload.forEach(p => {
+      const sel = '.field.field-jrpg > .team-column.' + (p.side === 'enemy' ? 'enemies' : 'allies') + ' > .unit:nth-child(' + p.slot + ')';
+      const horiz = p.side === 'enemy'
+        ? ('left: ' + p.left + '%')
+        : ('right: ' + Math.max(0, +(100 - p.left - p.widthPct).toFixed(1)) + '%');
+      lines.push(sel + ' { ' + horiz + '; bottom: ' + p.bottom + '%; }');
+    });
+    return lines.join('\n');
+  }
+
+  function refresh() {
+    const payload = buildPayload();
+    readout.innerHTML = payload.map(p =>
+      '<span class="label">' + p.side + '-' + p.slot + '</span>' +
+      'left: ' + p.left + '%  ·  bottom: ' + p.bottom + '%'
+    ).join('<br>');
+    if (!cssOut.hidden) cssOut.textContent = payloadAsCss(payload);
+  }
+
+  let dragging = null, offsetX = 0, offsetY = 0;
+  function startDrag(e, el) {
+    dragging = el;
+    el.classList.add('dragging');
+    const rect = el.getBoundingClientRect();
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
+    if (el.setPointerCapture) try { el.setPointerCapture(e.pointerId); } catch (_) {}
+  }
+  function moveDrag(e) {
+    if (!dragging) return;
+    const fieldRect = field.getBoundingClientRect();
+    const uRect = dragging.getBoundingClientRect();
+    let newLeftPx = e.clientX - fieldRect.left - offsetX;
+    let newTopPx = e.clientY - fieldRect.top - offsetY;
+    newLeftPx = clamp(newLeftPx, 0, fieldRect.width - uRect.width);
+    newTopPx = clamp(newTopPx, 0, fieldRect.height - uRect.height);
+    const leftPct = +(newLeftPx / fieldRect.width * 100).toFixed(1);
+    const bottomPct = +(((fieldRect.height - uRect.height) - newTopPx) / fieldRect.height * 100).toFixed(1);
+    dragging.style.left = leftPct + '%';
+    dragging.style.bottom = bottomPct + '%';
+    refresh();
+  }
+  function endDrag() {
+    if (!dragging) return;
+    dragging.classList.remove('dragging');
+    dragging = null;
+  }
+
+  units.forEach(el => {
+    el.addEventListener('pointerdown', e => { e.preventDefault(); startDrag(e, el); });
+  });
+  document.addEventListener('pointermove', moveDrag);
+  document.addEventListener('pointerup', endDrag);
+  document.addEventListener('pointercancel', endDrag);
+
+  document.getElementById('btn-reset').addEventListener('click', () => {
+    units.forEach(el => {
+      const d = DEFAULTS[key(el)];
+      el.style.left = d.left + '%';
+      el.style.bottom = d.bottom + '%';
+    });
+    refresh();
+    toast.textContent = 'Reset to defaults.';
+    setTimeout(() => { toast.textContent = ''; }, 1500);
+  });
+
+  document.getElementById('btn-copy').addEventListener('click', async () => {
+    const payload = buildPayload();
+    const css = payloadAsCss(payload);
+    try {
+      await navigator.clipboard.writeText(css);
+      toast.textContent = 'CSS copied to clipboard — paste into style.css around line 3365.';
+    } catch (e) {
+      toast.textContent = 'Clipboard blocked — CSS shown below:';
+      cssOut.hidden = false;
+      cssOut.textContent = css;
+    }
+    setTimeout(() => { toast.textContent = ''; }, 3500);
+  });
+
+  document.getElementById('btn-show').addEventListener('click', () => {
+    cssOut.hidden = false;
+    refresh();
+    toast.textContent = 'CSS shown below — click to select all.';
+    setTimeout(() => { toast.textContent = ''; }, 2500);
+  });
+
+  refresh();
+})();
+</script>
+</body>
+</html>

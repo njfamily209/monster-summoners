@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0a0d22" />
+  <meta name="description" content="Aetherbound — a single-player fantasy summoning RPG. Collect heroes, master elements, and rise through the Aether." />
+  <title>Aetherbound — Fantasy Summon RPG</title>
+  <link rel="stylesheet" href="style.css?v=20260520e" />
+</head>
+<body>
+  <div id="app" class="app" aria-live="polite">
+    <!-- screens are mounted dynamically -->
+  </div>
+
+  <!-- Reusable SVG defs (gradients, filters) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="3" result="blur"/>
+        <feMerge>
+          <feMergeNode in="blur"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
+      <filter id="soft-glow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="6" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+  </svg>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="data.js?v=20260520e"></script>
+  <script src="art.js?v=20260520e"></script>
+  <script src="sprites.js?v=20260520e"></script>
+  <script src="save.js?v=20260520e"></script>
+  <script src="summon.js?v=20260520e"></script>
+  <script src="audio.js?v=20260520e"></script>
+  <script src="combat.js?v=20260520e"></script>
+  <script src="ui.js?v=20260520e"></script>
+  <script src="game.js?v=20260520e"></script>
+</body>
+</html>

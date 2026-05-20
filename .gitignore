@@ -1,0 +1,24 @@
+# Dependencies (re-installable via npm install)
+node_modules/
+
+# Claude / Cowork local state
+.claude/
+
+# Raw downloaded art (large — not needed at runtime; sprites live in assets/)
+downloadedart/
+
+# Backup / scratch files
+*.clean
+*.bak
+*.tmp
+*.log
+
+# OS files
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Editor
+.vscode/
+.idea/
+*.swp

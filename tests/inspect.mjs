@@ -1,0 +1,25 @@
+import { JSDOM } from 'jsdom';
+import fs from 'node:fs';
+import path from 'node:path';
+const ROOT = path.resolve('/sessions/zen-youthful-ritchie/mnt/Game Design');
+const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+const stripped = html.replace(/<script\s+src=[^>]*><\/script>/g, '');
+const dom = new JSDOM(stripped, { url: 'file://'+ROOT+'/', runScripts:'dangerously', pretendToBeVisual:true });
+const w = dom.window, d = w.document;
+w.console.error = (...a) => process.stderr.write('ERR: '+a.join(' ')+'\n');
+w.addEventListener('error', e => process.stderr.write('WIN_ERR: '+(e.error?.stack || e.message)+'\n'));
+w.confirm = () => true;
+function inj(f){ const s=d.createElement('script'); s.textContent=fs.readFileSync(path.join(ROOT,f),'utf8'); d.body.appendChild(s); }
+await new Promise(r=>setTimeout(r,30));
+['data.js','art.js','save.js','combat.js','ui.js','game.js'].forEach(inj);
+await new Promise(r=>setTimeout(r,80));
+const A = w.GAME_ART;
+A.registerPack('pixel', { renderPortrait: m => `<img src="pixel/${m.name}.png"/>` });
+A.setPack('pixel');
+console.log('pixel:', A.renderPortrait({name:'Hero',element:'fire',art:{kind:'warrior'}}).slice(0,80));
+A.setPack('procedural');
+const out = A.renderPortrait({name:'Hero',element:'fire',art:{kind:'warrior'}});
+console.log('back to procedural, len:', out.length);
+console.log('contains <svg:', out.includes('<svg'));
+console.log('DONE');
+process.exit(0);
