@@ -430,3 +430,16 @@
     },
   };
 })();
+astSkill, aiAct, autoAct, toggleAuto,
+    D, A, C, U, S,
+    calcAttackDamage: C.calcAttackDamage,
+    setSelectedHeroIds: function(ids) { state.player.selectedHeroIds = ids.slice(); persist(); },
+    confirmTeam, resetSave, rebattle, persist, persistNow, pickStage,
+    grantVictoryRewards,
+    grantHero: function(id) { var inst = S.grantHero(state.player, id); persistNow(); return inst; },
+    grantAllHeroes: function() {
+      D.HEROES.forEach(function(h) { if (!S.ownsHero(state.player, h.id)) S.grantHero(state.player, h.id); });
+      persistNow();
+    },
+  };
+})();
