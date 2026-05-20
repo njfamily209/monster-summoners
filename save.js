@@ -495,4 +495,14 @@
     pickDailyQuests, ensureDailyQuests, getDailyQuests,
     progressQuest, claimQuestReward,
   };
+})();dScrolls,
+    isStageCleared, markStageCleared, isStageUnlocked,
+    MAX_STARS, ASCEND_COST, getHeroStars, canAscend, ascendHero,
+    getTodayStr, checkDailyLogin, recordWin, recordDefeat,
+    RUNE_SLOTS, generateRune, grantRune, deleteRune,
+    equipRune, unequipRune, getEquippedRunes, getHeroRuneBoosts,
+    DAILY_QUEST_DEFS, DAILY_QUEST_COUNT,
+    pickDailyQuests, ensureDailyQuests, getDailyQuests,
+    progressQuest, claimQuestReward,
+  };
 })();
