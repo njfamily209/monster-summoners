@@ -169,16 +169,8 @@
   function findInstance(state, instanceId) {
     return state.ownedInstances.find(i => i.instanceId === instanceId) || null;
   }
-  function addCrystals(state, n) {
-    if (typeof n !== 'number' || !isFinite(n)) return;
-    if (typeof state.crystals !== 'number' || !isFinite(state.crystals)) state.crystals = 0;
-    state.crystals = Math.max(0, state.crystals + n);
-  }
-  function addScrolls(state, n) {
-    if (typeof n !== 'number' || !isFinite(n)) return;
-    if (typeof state.scrolls !== 'number' || !isFinite(state.scrolls)) state.scrolls = 0;
-    state.scrolls = Math.max(0, state.scrolls + n);
-  }
+  function addCrystals(state, n) { state.crystals = Math.max(0, state.crystals + n); }
+  function addScrolls(state, n)  { state.scrolls  = Math.max(0, state.scrolls  + n); }
 
   // ----- Ascension -----
   const MAX_STARS = 6;
