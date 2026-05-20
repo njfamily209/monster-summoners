@@ -28,3 +28,14 @@ _test_write.txt
 _test_append.txt
 _test_big.txt
 _art_test.js
+_check.js
+_t.js
+_v.js
+_v2.js
+_wtest.txt
+_*.tmp
+art.js.broken
+ui.js.broken
+game.js.broken
+launch-test.js
+*.broken
