@@ -2382,3 +2382,27 @@
     throw err;
   }
 })();
+ageSelect, renderTeamSelect, renderBattle,
+    renderSummon, renderVault, renderCollection, renderHeroDetail,
+    renderShop, renderRunes, renderQuests,
+    renderLog, renderSkillPanel, renderAtb,
+    showPopup, animateUnit,
+    shakeField, hitStop, elementBurst,
+    showReveal, showResult, toast,
+    fmt,
+    SORT_OPTIONS, sortHeroes, renderSortSelector, roleClass,
+    capcomFlash, capcomStamp, capcomVS,
+    capcomCombo, capcomComboTick, capcomElemTint, capcomSuperZoom,
+    captureBattleSnapshot,
+  };
+  } catch (err) {
+    console.error("[ui.js] threw during IIFE:", err);
+    try {
+      var pre1 = document.getElementById("boot-fail-msg");
+      var el1  = document.getElementById("boot-fail");
+      if (pre1) pre1.textContent = "[ui.js] " + (err && err.stack ? err.stack : String(err));
+      if (el1)  el1.classList.add("show");
+    } catch (e) {}
+    throw err;
+  }
+})();

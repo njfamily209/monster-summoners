@@ -714,3 +714,16 @@
     listPacks: () => Object.keys(packs)
   };
 })();
+  } catch (err) {
+    console.error("[art.js] threw during IIFE:", err);
+    window.__ART_BOOT_ERR__ = err && err.stack ? err.stack : String(err);
+    try {
+      var pre = document.getElementById("boot-fail-msg");
+      var el  = document.getElementById("boot-fail");
+      if (pre) pre.textContent = "[art.js] " + (err && err.stack ? err.stack : String(err));
+      if (el)  el.classList.add("show");
+    } catch (e) {}
+    throw err;
+  }
+})();
+null;}catch(e){}}})();
