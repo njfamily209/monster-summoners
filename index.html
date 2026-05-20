@@ -68,20 +68,16 @@
   </div>
 
   <script>
-    // Boot guard. Catches uncaught errors and unhandled promise rejections during page load,
-    // shows the fallback UI so the user never sees a blank screen.
+    // Boot guard. Catches uncaught errors and shows fallback UI so user never sees a blank screen.
     (function () {
       var BOOT_TIMEOUT_MS = 6000;
-      var firstError = null;       // preserve the FIRST real error
-      var errorLog = [];           // collect everything for diagnostics
+      var firstError = null;
+      var errorLog = [];
       function showFail(msg, isWatchdog) {
         try {
           var el = document.getElementById('boot-fail');
           var pre = document.getElementById('boot-fail-msg');
-          // If a real error was already captured, don't let the watchdog overwrite it.
-          if (isWatchdog && firstError) {
-            msg = firstError + '\n\n--- watchdog ---\n' + msg;
-          }
+          if (isWatchdog && firstError) msg = firstError + '\n\n--- watchdog ---\n' + msg;
           if (pre && msg) pre.textContent = String(msg).substring(0, 2000);
           if (el) el.classList.add('show');
         } catch (e) {}
@@ -99,20 +95,17 @@
         if (!firstError) firstError = detail;
         if (!window.__GAME__) showFail(detail, false);
       });
-      // Watchdog: if __GAME__ never initialises, show the fail UI with diagnostics.
       setTimeout(function () {
         if (window.__GAME__) return;
-        var loaded = ['GAME_DATA','GAME_ART','GAME_SPRITES','GAME_SAVE','GAME_SUMMON','GAME_AUDIO','GAME_COMBAT','GAME_UI']
-          .filter(function (k) { return !!window[k]; });
-        var missing = ['GAME_DATA','GAME_ART','GAME_SPRITES','GAME_SAVE','GAME_SUMMON','GAME_AUDIO','GAME_COMBAT','GAME_UI']
-          .filter(function (k) { return !window[k]; });
+        var modules = ['GAME_DATA','GAME_ART','GAME_SPRITES','GAME_SAVE','GAME_SUMMON','GAME_AUDIO','GAME_COMBAT','GAME_UI'];
+        var loaded  = modules.filter(function (k) { return !!window[k]; });
+        var missing = modules.filter(function (k) { return !window[k]; });
         var msg = 'Game did not initialise within ' + BOOT_TIMEOUT_MS + 'ms.' +
                   '\nLoaded:  ' + (loaded.join(', ') || '(none)') +
                   '\nMissing: ' + (missing.join(', ') || '(none)');
         if (errorLog.length) msg += '\nErrors captured:\n  ' + errorLog.join('\n  ');
         showFail(msg, true);
       }, BOOT_TIMEOUT_MS);
-      // Emergency reset via URL: index.html?reset=1
       if (/[?&]reset=1\b/.test(location.search)) {
         try { localStorage.removeItem('aetherbound.save.v1'); } catch (e) {}
         history.replaceState(null, '', location.pathname);
@@ -120,14 +113,14 @@
     })();
   </script>
 
-  <script src="data.js?v=20260520f"></script>
-  <script src="art.js?v=20260520f"></script>
-  <script src="sprites.js?v=20260520f"></script>
-  <script src="save.js?v=20260520f"></script>
-  <script src="summon.js?v=20260520f"></script>
-  <script src="audio.js?v=20260520f"></script>
-  <script src="combat.js?v=20260520f"></script>
-  <script src="ui.js?v=20260520f"></script>
-  <script src="game.js?v=20260520f"></script>
+  <script src="data.js?v=20260520g"></script>
+  <script src="art.js?v=20260520g"></script>
+  <script src="sprites.js?v=20260520g"></script>
+  <script src="save.js?v=20260520g"></script>
+  <script src="summon.js?v=20260520g"></script>
+  <script src="audio.js?v=20260520g"></script>
+  <script src="combat.js?v=20260520g"></script>
+  <script src="ui.js?v=20260520g"></script>
+  <script src="game.js?v=20260520g"></script>
 </body>
 </html>
