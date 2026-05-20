@@ -556,7 +556,7 @@ img, svg { display: block; }
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
 .reveal-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 10px;
   width: 100%;
 }
 .reveal-cell {
