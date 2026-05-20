@@ -121,16 +121,6 @@
     if (!merged.heroRunes || typeof merged.heroRunes !== 'object') merged.heroRunes = {};
     // dailyQuests: null is valid (will be seeded on first access)
     if (merged.dailyQuests !== null && typeof merged.dailyQuests !== 'object') merged.dailyQuests = null;
-    // Drop references to heroes that no longer exist in data (e.g. after a
-    // balance pass renames or removes a hero). Prevents downstream null
-    // dereferences when ascending, equipping runes, or building a team.
-    merged.ownedInstances = merged.ownedInstances.filter(i => i && D.heroById(i.id));
-    merged.selectedHeroIds = merged.selectedHeroIds.filter(id => D.heroById(id));
-    if (merged.heroRunes && typeof merged.heroRunes === 'object') {
-      for (const heroId of Object.keys(merged.heroRunes)) {
-        if (!D.heroById(heroId)) delete merged.heroRunes[heroId];
-      }
-    }
     merged.version = SAVE_VERSION;
     return merged;
   }
@@ -282,15 +272,6 @@
   function equipRune(state, heroId, runeId) {
     const rune = (state.runeInventory || []).find(r => r.runeId === runeId);
     if (!rune) return null;
-    // Defensive: a corrupted rune (e.g., from an old save before slot existed)
-    // could have slot === undefined / NaN / out-of-range, which would index a
-    // bogus property on the slot array and silently break unequip later.
-    // Reject those rather than corrupt heroRunes state.
-    const rawSlot = rune.slot;
-    if (typeof rawSlot !== 'number' || !isFinite(rawSlot) ||
-        rawSlot < 1 || rawSlot > RUNE_SLOTS) {
-      return null;
-    }
     // Remove from any other hero's slot first so a rune can only be equipped once.
     if (state.heroRunes) {
       for (const otherId of Object.keys(state.heroRunes)) {
@@ -299,7 +280,7 @@
       }
     }
     ensureHeroRuneSlots(state, heroId);
-    const slotIdx = rawSlot - 1;
+    const slotIdx = rune.slot - 1;
     const displaced = state.heroRunes[heroId][slotIdx];
     state.heroRunes[heroId][slotIdx] = runeId;
     return displaced;
